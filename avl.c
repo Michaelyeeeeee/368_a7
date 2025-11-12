@@ -151,7 +151,7 @@ int create_avl(char *inFile, AVL *avl)
 {
     if (!avl)
         return 0;
-    FILE *file1 = fopen(inFile, "r");
+    FILE *file1 = fopen(inFile, "rb");
     if (!file1)
     {
         fprintf(stdout, "-1\n");
@@ -160,7 +160,7 @@ int create_avl(char *inFile, AVL *avl)
 
     int x;
     char y;
-    while (fscanf(file1, " %d %c", &x, &y) == 2)
+    while (fread(&x, sizeof(int), 1, file1) == 1 && fread(&y, sizeof(char), 1, file1) == 1)
     {
         if (y == 'i')
         {
@@ -168,6 +168,7 @@ int create_avl(char *inFile, AVL *avl)
             if (!node)
             {
                 fclose(file1);
+                printf("0\n");
                 return 0;
             }
             avl->root = insert(avl->root, node);
@@ -178,8 +179,8 @@ int create_avl(char *inFile, AVL *avl)
         }
         else
         {
-            /* unexpected token */
             fclose(file1);
+            printf("0\n");
             return 0;
         }
     }
@@ -192,10 +193,10 @@ int write_tree(char *outFile, AVL *avl)
 {
     if (!avl)
         return 0;
-    FILE *file = fopen(outFile, "w");
+    FILE *file = fopen(outFile, "wb");
     if (!file)
     {
-        fprintf(stdout, "-1\n");
+        printf("-1\n");
         return -1;
     }
 
@@ -210,14 +211,17 @@ void write_node(FILE *file, Tnode *node)
     if (!node)
         return;
 
-    int format = 0;
+    char format = 0;
     if (node->left)
         format += 2;
     if (node->right)
         format += 1;
 
-    /* Write in same "key code" format that buildTree expects: "<key> <code>\n" */
-    fprintf(file, "%d %d\n", node->key, format);
+    int key = node->key;
+
+    fwrite(&key, sizeof(int), 1, file);
+    fwrite(&format, sizeof(char), 1, file);
+
     if (node->left)
         write_node(file, node->left);
     if (node->right)
@@ -230,7 +234,7 @@ int build(char *inFile, char *outFile)
     AVL *avl = malloc(sizeof(AVL));
     if (!avl)
     {
-        fprintf(stdout, "0\n");
+        printf("0\n");
         return 0;
     }
     avl->root = NULL;
@@ -294,7 +298,7 @@ int evaluate(char *inFile)
     AVL *avl = malloc(sizeof(AVL));
     if (!avl)
     {
-        fprintf(stdout, "0\n");
+        printf("0\n");
         return 0;
     }
 
@@ -307,6 +311,13 @@ int evaluate(char *inFile)
     }
 
     avl->root = buildTree(file1);
+    if (!avl->root)
+    {
+        printf("0,0,0\n");
+        free(avl);
+        fclose(file1);
+        return -1;
+    }
     int mid = evaluate_bst(avl->root);
     int right = evaluate_balanced(avl->root);
 

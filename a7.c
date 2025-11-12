@@ -2,10 +2,6 @@
 
 int main(int argc, char **argv)
 {
-    /* expected usage:
-       a7 -b inFile outFile   (argc == 4)
-       a7 -e inFile           (argc == 3)
-    */
     if (argc < 2)
         return EXIT_FAILURE;
 
