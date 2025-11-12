@@ -233,12 +233,14 @@ int build(char *inFile, char *outFile)
     if (r == -1)
     {
         free(avl);
+
         return -1;
     }
     if (r != 1)
     {
         free_tree(avl->root);
         free(avl);
+
         return 0;
     }
 
@@ -247,6 +249,7 @@ int build(char *inFile, char *outFile)
     free(avl);
     if (!w)
         return 0;
+
     return 1;
 }
 
@@ -270,16 +273,28 @@ int evaluate_bst(Tnode *root)
     return 1;
 }
 
-/* evaluates if balanced: balance in [-1,1] for every node */
-int evaluate_balanced(Tnode *root)
+/* checks balance of -e */
+int check_balance(Tnode *root)
 {
     if (!root)
-        return 1;
-    if (root->balance > 1 || root->balance < -1)
         return 0;
-    if (!evaluate_balanced(root->left) || !evaluate_balanced(root->right))
-        return 0;
-    return 1;
+    // check if children are balanced
+    int left = check_balance(root->left);
+    if (left == -1)
+        return -1;
+    int right = check_balance(root->right);
+    if (right == -1)
+        return -1;
+    // unbalanced
+    if (left - right > 1 || left - right < -1)
+        return -1;
+    // if balanced, then return height
+    return (left > right ? left : right) + 1;
+}
+
+int evaluate_balanced(Tnode *root)
+{
+    return check_balance(root) != -1;
 }
 
 /* evaluates total output */
@@ -315,6 +330,7 @@ int evaluate(char *inFile)
     free_tree(avl->root);
     free(avl);
     fclose(file1);
+
     return 1;
 }
 

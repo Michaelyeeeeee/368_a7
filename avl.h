@@ -28,6 +28,7 @@ int build(char *inFile, char *outFile);
 int create_avl(char *inFile, AVL *avl);
 int evaluate(char *inFile);
 int evaluate_bst(Tnode *root);
+int check_balance(Tnode *root);
 int evaluate_balanced(Tnode *root);
 Tnode *buildTree(FILE *fp);
 int write_tree(char *outFile, AVL *avl);
