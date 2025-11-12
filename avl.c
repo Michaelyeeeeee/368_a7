@@ -73,11 +73,6 @@ Tnode *create_node(int key)
     return node;
 }
 
-/* NOTE:
-   This implementation tracks a very simplistic "balance" value used by this codebase;
-   it's not a full AVL height calculation. I'm leaving the tree logic mostly as-is
-   except where it caused crashes or clear mistakes.
-*/
 Tnode *insert(Tnode *root, Tnode *node)
 {
     if (!root)
@@ -88,7 +83,7 @@ Tnode *insert(Tnode *root, Tnode *node)
     else
         root->right = insert(root->right, node);
 
-    /* Update balance factor roughly */
+    /* Update balance factor */
     int left_height = root->left ? (1 + (root->left->balance > 0 ? root->left->balance : 0)) : 0;
     int right_height = root->right ? (1 + (root->right->balance > 0 ? root->right->balance : 0)) : 0;
     root->balance = left_height - right_height;
@@ -114,7 +109,7 @@ Tnode *delete_node(Tnode *root, int key)
             free(root);
             return temp;
         }
-        /* node with two children: replace with in-order predecessor */
+        /* node with two children */
         else
         {
             Tnode *temp = root->left;
@@ -141,12 +136,7 @@ void free_tree(Tnode *node)
     free(node);
 }
 
-/* creates avl tree for -b option
-   Returns:
-     1 on success
-    -1 on file open error
-     0 on parse/format error
-*/
+/* creates avl tree for -b option */
 int create_avl(char *inFile, AVL *avl)
 {
     if (!avl)
@@ -260,7 +250,7 @@ int build(char *inFile, char *outFile)
     return 1;
 }
 
-/* evaluates if BST (inorder strictly increasing) */
+/* evaluates if BST */
 int evaluate_bst(Tnode *root)
 {
     if (!root)
