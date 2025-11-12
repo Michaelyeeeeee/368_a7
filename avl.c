@@ -234,7 +234,7 @@ int build(char *inFile, char *outFile)
     {
         free(avl);
 
-        return -1;
+        return -0;
     }
     if (r != 1)
     {

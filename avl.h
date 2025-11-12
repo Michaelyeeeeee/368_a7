@@ -17,13 +17,11 @@ Tnode *rotate_left_right(Tnode *node);
 Tnode *rotate_right_left(Tnode *node);
 Tnode *balance(Tnode *node);
 
-/* node utilities */
 Tnode *create_node(int key);
 
 Tnode *insert(Tnode *root, Tnode *node);
 Tnode *delete_node(Tnode *root, int key);
 
-/* top-level operations */
 int build(char *inFile, char *outFile);
 int create_avl(char *inFile, AVL *avl);
 int evaluate(char *inFile);
