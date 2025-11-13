@@ -1,5 +1,26 @@
 #include "avl.h"
 
+/* helper: compute height per assignment spec:
+ * empty tree has height -1
+ */
+static int height(Tnode *n)
+{
+    if (!n)
+        return -1;
+    int lh = height(n->left);
+    int rh = height(n->right);
+    return 1 + (lh > rh ? lh : rh);
+}
+
+/* update balance field for node (left height - right height) */
+static void update_balance(Tnode *n)
+{
+    if (!n)
+        return;
+    n->balance = height(n->left) - height(n->right);
+}
+
+/* rotations (update balances for affected nodes) */
 Tnode *rotate_left(Tnode *node)
 {
     if (!node || !node->right)
@@ -7,6 +28,10 @@ Tnode *rotate_left(Tnode *node)
     Tnode *new_root = node->right;
     node->right = new_root->left;
     new_root->left = node;
+
+    /* update balances (bottom-up) */
+    update_balance(node);
+    update_balance(new_root);
     return new_root;
 }
 
@@ -17,6 +42,10 @@ Tnode *rotate_right(Tnode *node)
     Tnode *new_root = node->left;
     node->left = new_root->right;
     new_root->right = node;
+
+    /* update balances (bottom-up) */
+    update_balance(node);
+    update_balance(new_root);
     return new_root;
 }
 
@@ -36,25 +65,33 @@ Tnode *rotate_right_left(Tnode *node)
     return rotate_left(node);
 }
 
+/* balance node according to its balance factor */
 Tnode *balance(Tnode *node)
 {
     if (!node)
         return NULL;
 
-    if (node->balance < -1)
+    update_balance(node);
+
+    if (node->balance > 1) /* left heavy */
     {
+        /* if left child is right-heavy -> LR case */
+        update_balance(node->left);
+        if (node->left && node->left->balance < 0)
+            return rotate_left_right(node);
+        else
+            return rotate_right(node);
+    }
+    else if (node->balance < -1) /* right heavy */
+    {
+        /* if right child is left-heavy -> RL case */
+        update_balance(node->right);
         if (node->right && node->right->balance > 0)
             return rotate_right_left(node);
         else
             return rotate_left(node);
     }
-    else if (node->balance > 1)
-    {
-        if (node->left && node->left->balance > 0)
-            return rotate_right(node);
-        else
-            return rotate_left_right(node);
-    }
+
     return node;
 }
 
@@ -63,7 +100,8 @@ Tnode *create_node(int key)
     Tnode *node = (Tnode *)malloc(sizeof(Tnode));
     if (!node)
     {
-        fprintf(stdout, "0\n");
+        /* On memory allocation failure the assignment asks to print 0 and fail later;
+           here we just return NULL and the caller handles it. */
         return NULL;
     }
     node->key = key;
@@ -73,57 +111,99 @@ Tnode *create_node(int key)
     return node;
 }
 
+/* insert: keeps duplicates by going left when key == root->key
+ * signature kept as (root, node) to match existing create_avl usage
+ */
 Tnode *insert(Tnode *root, Tnode *node)
 {
-    if (!root)
-        return node;
+    if (!node)
+        return root; /* nothing to insert */
 
-    if (node->key < root->key)
+    if (!root)
+    {
+        /* node becomes the new root of this subtree */
+        return node;
+    }
+
+    if (node->key <= root->key)
         root->left = insert(root->left, node);
     else
         root->right = insert(root->right, node);
 
-    /* Update balance factor */
-    int left_height = root->left ? (1 + (root->left->balance > 0 ? root->left->balance : 0)) : 0;
-    int right_height = root->right ? (1 + (root->right->balance > 0 ? root->right->balance : 0)) : 0;
-    root->balance = left_height - right_height;
-
+    /* update balance and rebalance if needed */
+    update_balance(root);
     return balance(root);
 }
 
+/* remove_max: remove the maximum node in subtree rooted at n
+ * Returns new subtree root after removal.
+ * Sets *max_node to the removed node (the caller is responsible to free it or use its key).
+ */
+static Tnode *remove_max(Tnode *n, Tnode **max_node)
+{
+    if (!n)
+        return NULL;
+    if (!n->right)
+    {
+        /* this node is the max */
+        *max_node = n;
+        return n->left; /* return left child to be linked by parent */
+    }
+    n->right = remove_max(n->right, max_node);
+
+    /* update balance and rebalance up the recursion */
+    update_balance(n);
+    return balance(n);
+}
+
+/* delete_node: delete the first node found by BST search for 'key'.
+ * Returns new subtree root after deletion.
+ */
 Tnode *delete_node(Tnode *root, int key)
 {
     if (!root)
-        return root;
+        return NULL;
 
     if (key < root->key)
+    {
         root->left = delete_node(root->left, key);
+    }
     else if (key > root->key)
+    {
         root->right = delete_node(root->right, key);
+    }
     else
     {
-        /* node with one or no children */
-        if (!root->left || !root->right)
+        /* found node to delete (this is the first encountered by normal BST search) */
+        if (!root->left && !root->right)
         {
-            Tnode *temp = root->left ? root->left : root->right;
+            /* no children */
             free(root);
-            return temp;
+            return NULL;
         }
-        /* node with two children */
+        else if (!root->left || !root->right)
+        {
+            /* one child */
+            Tnode *child = root->left ? root->left : root->right;
+            free(root);
+            return child;
+        }
         else
         {
-            Tnode *temp = root->left;
-            while (temp->right)
-                temp = temp->right;
-            root->key = temp->key;
-            root->left = delete_node(root->left, temp->key);
+            /* two children: replace with in-order predecessor (max in left subtree) */
+            Tnode *pred = NULL;
+            root->left = remove_max(root->left, &pred);
+            if (pred)
+            {
+                /* copy key from predecessor into current node, then free predecessor */
+                root->key = pred->key;
+                free(pred);
+            }
         }
     }
 
-    /* Update balance factor */
-    int left_height = root->left ? (1 + (root->left->balance > 0 ? root->left->balance : 0)) : 0;
-    int right_height = root->right ? (1 + (root->right->balance > 0 ? root->right->balance : 0)) : 0;
-    root->balance = left_height - right_height;
+    /* update balance and rebalance on the way back up */
+    update_balance(root);
     return balance(root);
 }
 
@@ -158,7 +238,7 @@ int create_avl(char *inFile, AVL *avl)
             if (!node)
             {
                 fclose(file1);
-                printf("0\n");
+                fprintf(stdout, "0\n");
                 return 0;
             }
             avl->root = insert(avl->root, node);
@@ -170,7 +250,7 @@ int create_avl(char *inFile, AVL *avl)
         else
         {
             fclose(file1);
-            printf("0\n");
+            fprintf(stdout, "0\n");
             return 0;
         }
     }
@@ -209,6 +289,7 @@ void write_node(FILE *file, Tnode *node)
 
     int key = node->key;
 
+    /* debug print kept from your original - you can remove if not needed */
     printf("%d %d\n", key, format);
 
     fwrite(&key, sizeof(int), 1, file);
@@ -235,14 +316,12 @@ int build(char *inFile, char *outFile)
     if (r == -1)
     {
         free(avl);
-
         return -0;
     }
     if (r != 1)
     {
         free_tree(avl->root);
         free(avl);
-
         return 0;
     }
 
