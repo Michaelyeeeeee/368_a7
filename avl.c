@@ -1,8 +1,6 @@
 #include "avl.h"
 
-/* helper: compute height per assignment spec:
- * empty tree has height -1
- */
+/* finds height */
 static int height(Tnode *n)
 {
     if (!n)
@@ -12,7 +10,7 @@ static int height(Tnode *n)
     return 1 + (lh > rh ? lh : rh);
 }
 
-/* update balance field for node (left height - right height) */
+/* update balance field for node */
 static void update_balance(Tnode *n)
 {
     if (!n)
@@ -20,7 +18,7 @@ static void update_balance(Tnode *n)
     n->balance = height(n->left) - height(n->right);
 }
 
-/* rotations (update balances for affected nodes) */
+/* rotations */
 Tnode *rotate_left(Tnode *node)
 {
     if (!node || !node->right)
@@ -29,7 +27,6 @@ Tnode *rotate_left(Tnode *node)
     node->right = new_root->left;
     new_root->left = node;
 
-    /* update balances (bottom-up) */
     update_balance(node);
     update_balance(new_root);
     return new_root;
@@ -43,7 +40,6 @@ Tnode *rotate_right(Tnode *node)
     node->left = new_root->right;
     new_root->right = node;
 
-    /* update balances (bottom-up) */
     update_balance(node);
     update_balance(new_root);
     return new_root;
@@ -288,9 +284,6 @@ void write_node(FILE *file, Tnode *node)
         format += 1;
 
     int key = node->key;
-
-    /* debug print kept from your original - you can remove if not needed */
-    printf("%d %d\n", key, format);
 
     fwrite(&key, sizeof(int), 1, file);
     fwrite(&format, sizeof(char), 1, file);

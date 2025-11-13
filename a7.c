@@ -15,7 +15,6 @@ int main(int argc, char **argv)
         int check = build(argv[2], argv[3]);
         if (check != 1)
         {
-            fprintf(stdout, "exit failure\n");
             return EXIT_FAILURE;
         }
         fprintf(stdout, "1\n");
