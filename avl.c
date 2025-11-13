@@ -337,8 +337,9 @@ int evaluate(char *inFile)
 /* builds tree for -e */
 Tnode *buildTree(FILE *fp)
 {
-    int key, code;
-    if (fscanf(fp, "%d %d", &key, &code) != 2)
+    int key;
+    char code;
+    if (fread(&key, sizeof(int), 1, fp) != 1 || fread(&code, sizeof(char), 1, fp) != 1)
         return NULL;
 
     Tnode *root = create_node(key);
