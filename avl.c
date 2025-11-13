@@ -209,6 +209,8 @@ void write_node(FILE *file, Tnode *node)
 
     int key = node->key;
 
+    printf("%d %d\n", key, format);
+
     fwrite(&key, sizeof(int), 1, file);
     fwrite(&format, sizeof(char), 1, file);
 
