@@ -15,6 +15,7 @@ int main(int argc, char **argv)
         int check = build(argv[2], argv[3]);
         if (check != 1)
             return EXIT_FAILURE;
+        fprintf(stdout, "1\n");
         return EXIT_SUCCESS;
     }
     else if (command == 'e' && argc == 3)
