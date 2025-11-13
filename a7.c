@@ -5,20 +5,19 @@ int main(int argc, char **argv)
     if (argc < 2)
         return EXIT_FAILURE;
 
-    fprintf(stdout, "check -\n");
     if (argv[1][0] != '-' || argv[1][1] == '\0')
         return EXIT_FAILURE;
 
     char command = argv[1][1];
 
-    fprintf(stdout, "check build\n");
     if (command == 'b' && argc == 4)
     {
-        fprintf(stdout, "build call\n");
         int check = build(argv[2], argv[3]);
         if (check != 1)
+        {
             fprintf(stdout, "exit failure\n");
-        return EXIT_FAILURE;
+            return EXIT_FAILURE;
+        }
         fprintf(stdout, "1\n");
         return EXIT_SUCCESS;
     }
