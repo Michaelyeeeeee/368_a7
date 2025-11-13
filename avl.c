@@ -63,7 +63,7 @@ Tnode *create_node(int key)
     Tnode *node = (Tnode *)malloc(sizeof(Tnode));
     if (!node)
     {
-        fprintf(stderr, "create_node: malloc failed\n");
+        fprintf(stdout, "0\n");
         return NULL;
     }
     node->key = key;
