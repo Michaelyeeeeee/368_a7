@@ -10,8 +10,10 @@ int main(int argc, char **argv)
 
     char command = argv[1][1];
 
+    fprintf(stdout, "check build\n");
     if (command == 'b' && argc == 4)
     {
+        fprintf(stdout, "build call\n");
         int check = build(argv[2], argv[3]);
         if (check != 1)
             fprintf(stdout, "exit failure\n");
